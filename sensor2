@@ -1,0 +1,12 @@
+[General]
+Name=sensor2
+Class=0x001f00
+SupportedTechnologies=BR/EDR;
+Trusted=true
+Blocked=false
+Services=00001101-0000-1000-8000-00805f9b34fb;
+
+[LinkKey]
+Key=2769508141BC29F1053D26589483C0BD
+Type=0
+PINLength=0

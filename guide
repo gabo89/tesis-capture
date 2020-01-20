@@ -1,0 +1,110 @@
+
+http://www.userk.co.uk/arduino-bluetooth-linux/
+
+bluez-* python-gobject python-dbus
+
+
+---------------------------------------------------------------
+[root@localhost tesis]# hciconfig
+hci0:	Type: Primary  Bus: USB
+	BD Address: 00:10:60:D2:DB:CD  ACL MTU: 310:10  SCO MTU: 64:8
+	UP RUNNING PSCAN ISCAN 
+	RX bytes:117969 acl:1434 sco:0 events:5083 errors:0
+	TX bytes:12578 acl:391 sco:0 commands:456 errors:0
+
+---------------------------------------------------------------
+
+sudo hciconfig hci0 up
+hcitool dev
+hcitool scan
+Scanning ...
+	30:14:06:18:04:67	sensor2
+
+
+rfcomm bind 1 30:14:06:18:04:67 2
+---------------------------------------------------------------
+You shouldn’t get this error the first time you try to connect but you will see it a couple of time in future. So if that happens, just release the device with.
+---------------------------------------------------------------
+rfcomm release 0
+rfcomm bind 0 30:14:06:18:04:67 1
+rfcomm
+rfcomm0: 00:06:66:68:20:61 channel 1 clean
+
+---------------------------------------------------------------
+[root@localhost bluetooth]# rpm -ql bluez-tools-0.2.0-0.7.git20170912.7cb788c.el7.x86_64
+/usr/bin/bt-adapter
+/usr/bin/bt-agent
+/usr/bin/bt-device
+/usr/bin/bt-network
+/usr/bin/bt-obex
+---------------------------------------------------------------
+
+
+[root@localhost tesis]# /usr/bin/bt-adapter  -i
+[hci0]
+  Name: localhost.localdomain
+  Address: 00:10:60:D2:DB:CD
+  Alias: localhost.localdomain [rw]
+  Class: 0x1c0104
+  Discoverable: 1 [rw]
+  DiscoverableTimeout: 0 [rw]
+  Discovering: 1
+  Pairable: 1 [rw]
+  PairableTimeout: 0 [rw]
+  Powered: 1 [rw]
+  UUIDs: [HeadsetAudioGateway, 00001801-0000-1000-8000-00805f9b34fb, AVRemoteControl, OBEXFileTransfer, 00001800-0000-1000-8000-00805f9b34fb, OBEXObjectPush, PnPInformation, AVRemoteControlTarget, IrMCSync, AudioSource, AudioSink, 00001133-0000-1000-8000-00805f9b34fb, PhoneBookAccess, 00001132-0000-1000-8000-00805f9b34fb]
+
+---------------------------------------------------------------
+
+
+https://linuxize.com/post/how-to-install-python-3-on-centos-7/
+
+
+/usr/bin/bt-agent -p /opt/project/tesis/pinfile -d
+/usr/bin/bt-device -c 30:14:06:18:04:67 
+
+
+/usr/bin/rfcomm -a
+/usr/bin/rfcomm bind 0 30:14:06:18:04:67 1
+/usr/bin/rfcomm -a
+---------------------------------------------------------------
+picocom -b 57600 -c /dev/rfcomm0
+---------------------------------------------------------------
+
+
+#o1 streaming on sensor
+#o0 stop streaming
+
+
+#osrt text
+#osrb binary
+---------------------------------------------------------------
+[root@localhost tesis]# stty -F /dev/rfcomm0 -a
+speed 115200 baud; rows 0; columns 0; line = 0;
+intr = ^C; quit = ^\; erase = ^?; kill = ^U; eof = ^A; eol = <undef>; eol2 = <undef>; swtch = <undef>; start = ^Q; stop = ^S; susp = ^Z;
+rprnt = ^R; werase = ^W; lnext = ^V; flush = ^O; min = 1; time = 0;
+-parenb -parodd -cmspar cs8 hupcl -cstopb cread -clocal -crtscts
+-ignbrk -brkint ignpar -parmrk -inpck -istrip -inlcr -igncr -icrnl -ixon -ixoff -iuclc -ixany -imaxbel -iutf8
+-opost -olcuc -ocrnl -onlcr -onocr -onlret -ofill -ofdel nl0 cr0 tab0 bs0 vt0 ff0
+-isig -icanon -iexten -echo -echoe -echok -echonl -noflsh -xcase -tostop -echoprt -echoctl -echoke
+---------------------------------------------------------------
+
+
+stty -F /dev/ttyS0 9600 cs8 -cstopb -parenb
+
+
+---------------------------------------------------------------
+[root@localhost tesis]# lscpu | grep "Byte Order"
+Byte Order:            Little Endian
+---------------------------------------------------------------
+
+to autopair blueooth devices you need to see a pincodefiles in 
+
+/var/lib/bluetooth/11:22:33:44:55:66/pincodes
+
+with content
+11:22:33:44:55:66 1234
+
+
+
+
