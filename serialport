@@ -1,0 +1,165 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package serialport;
+
+//need to import javax for consistency across devices discovery
+//https://www.oracle.com/java/technologies/java-archive-misc-downloads.html
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import gnu.io.CommPortIdentifier; 
+import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent; 
+import gnu.io.SerialPortEventListener; 
+import java.util.Enumeration;
+
+
+public class Serialport implements SerialPortEventListener {
+SerialPort serialPort;
+    /** The port we're normally going to use. */
+/*private static final String PORT_NAMES[] = {                  "/dev/tty.usbserial-A9007UX1", // Mac OS X
+        "/dev/ttyUSB0", // Linux
+        "COM35", // Windows
+};
+*/
+
+//port com7 is the correct one
+
+//com8 or com9
+private static final String PORT_NAMES[] = { "COM7" };
+private static BufferedReader input;
+private static OutputStream output;
+private static final int TIME_OUT = 2000;
+private static final int DATA_RATE = 57600;
+
+
+
+public void initialize() {
+    CommPortIdentifier portId = null;
+    Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
+    
+    Enumeration pList = CommPortIdentifier.getPortIdentifiers();
+    while (pList.hasMoreElements()) {
+        CommPortIdentifier cpi = (CommPortIdentifier) pList.nextElement();
+        System.out.println("Port " + cpi.getName() + " ");       
+    }
+    
+    
+    System.out.println("boolen:"+portEnum.hasMoreElements());
+    //First, Find an instance of serial port as set in PORT_NAMES.
+    while (portEnum.hasMoreElements()) {
+        CommPortIdentifier currPortId = (CommPortIdentifier) portEnum.nextElement();
+        
+        if (currPortId.getPortType() == CommPortIdentifier.PORT_SERIAL)
+        {
+            for (String portName : PORT_NAMES) {            
+                if (currPortId.getName().equals(portName)) {
+                    portId = currPortId;
+                    break;
+                }
+        }
+        }
+    }
+    
+    if (portId != null) 
+    System.out.println("got portid:"+portId.toString());
+    
+    if (portId == null) {
+        System.out.println("Could not find or open PORT.");
+        return;
+    }
+
+    System.out.println("trying to open port");
+    try {
+        serialPort = (SerialPort) portId.open(this.getClass().getName(),
+                TIME_OUT);
+        serialPort.setSerialPortParams(DATA_RATE,
+                SerialPort.DATABITS_8,
+                SerialPort.STOPBITS_1,
+                SerialPort.PARITY_NONE);
+        serialPort.enableReceiveThreshold(2);
+        serialPort.enableReceiveTimeout(1);
+        serialPort.setDTR(false);
+        serialPort.setRTS(false);
+        
+        System.out.println("port opened");
+        // open the streams
+        
+        //data that get into the serialport from device
+        input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
+        
+        
+        //data that goes from the serialport to device
+        output = serialPort.getOutputStream();
+        
+         String datatosend="#o1";
+        System.out.println("writing data to port");
+        output.write(datatosend.getBytes());
+        
+        serialPort.addEventListener(this);
+        serialPort.notifyOnDataAvailable(true);
+        
+       
+        
+    } catch (Exception e) {
+        System.err.println(e.toString());
+    }
+}
+
+
+public synchronized void close() {
+    if (serialPort != null) {
+        try {
+            String datatosend="#o0";
+        output.write(datatosend.getBytes());
+        serialPort.removeEventListener();
+        serialPort.close();
+        
+        } catch (Exception e) {
+        System.err.println(e.toString());
+    }
+    }
+}
+
+public synchronized void serialEvent(SerialPortEvent oEvent) {
+    if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
+        try {
+            int inputLine;
+            if (input.ready()) {
+               
+                inputLine = input.read();
+                            System.out.println(inputLine);
+            }
+
+        } catch (Exception e) {
+            System.err.println(e.toString());
+        }
+    }
+    // Ignore all the other eventTypes, but you should consider the other ones.
+}
+
+public static void main(String[] args) throws Exception {
+    Serialport main = new Serialport();
+    main.initialize();
+    
+    
+    Thread t=new Thread() {
+        public void run() {
+            //the following line will keep this app alive for 1000    seconds,
+            //waiting for events to occur and responding to them    (printing incoming messages to console).
+            
+            
+            
+            try {Thread.sleep(1000000);} catch (InterruptedException    ie) {}
+        }
+    };
+    t.start();
+    System.out.println(" thread Started");
+    
+    
+}
+}
